@@ -527,7 +527,7 @@ When ready, output ONLY the JSON in the exact format requested by the user.
 # 4. Modify the final run statement to:
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 7860))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=False)
 
 # 5. Add error handling for missing token:
 if not aipipe_token:
