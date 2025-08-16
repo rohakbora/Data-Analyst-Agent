@@ -1,15 +1,15 @@
 Flask==3.1.1
 pandas==2.3.1
-numpy==2.3.2
-matplotlib==3.10.5
-torch==2.2.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
-duckdb==1.3.2
-PyPDF2==3.0.1
-pillow==11.3.0
-requests==2.32.4
-beautifulsoup4==4.13.4
-tiktoken==0.11.0
-scikit-learn==1.7.1
+numpy
+matplotlib
+torch==2.8.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 sentence-transformers==5.1.0
-seaborn==0.13.2
+duckdb
+PyPDF2
+pillow
+requests
+beautifulsoup4
+tiktoken
+scikit-learn
+seaborn
 gunicorn
