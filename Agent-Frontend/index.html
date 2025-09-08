@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Analyst Agent</title>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f1f1f1;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin: 15px 0;
+      color: #333;
+    }
+    #chat {
+      flex: 1;
+      width: 100%;
+      max-width: 700px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .user {
+      align-self: flex-end;
+      background: #007bff;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .agent {
+      align-self: flex-start;
+      background: #e9ecef;
+      color: #333;
+      border-bottom-left-radius: 4px;
+    }
+    #inputArea {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+    }
+    #questionInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      resize: none;
+      min-height: 40px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+    #fileInput {
+      display: none;
+    }
+    .iconBtn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      margin-left: 8px;
+      cursor: pointer;
+      color: #007bff;
+    }
+    .sendBtn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      margin-left: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .sendBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Data Analyst Agent</h1>
+  <div id="chat"></div>
+
+  <div id="inputArea">
+    <textarea id="questionInput" placeholder="Type your questions here..."></textarea>
+    <label for="fileInput" class="iconBtn" title="Attach files">➕</label>
+    <input type="file" id="fileInput" multiple>
+    <button id="sendBtn" class="sendBtn">Send</button>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const questionInput = document.getElementById('questionInput');
+    const fileInput = document.getElementById('fileInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let attachedFiles = [];
+
+    fileInput.addEventListener('change', (e) => {
+      attachedFiles = Array.from(e.target.files);
+      alert(attachedFiles.length + " file(s) attached");
+    });
+
+    function addMessage(text, sender='user') {
+      const div = document.createElement('div');
+      div.className = `bubble ${sender}`;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    sendBtn.addEventListener('click', async () => {
+      const text = questionInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      questionInput.value = '';
+      sendBtn.disabled = true;
+      addMessage('Thinking...', 'agent');
+      chat.scrollTop = chat.scrollHeight;
+
+      const formData = new FormData();
+      formData.append('questions.txt', new Blob([text], {type: 'text/plain'}), 'questions.txt');
+      attachedFiles.forEach(file => formData.append(file.name, file));
+
+      try {
+        // use the correct endpoint with trailing slash
+        const res = await fetch('https://rohakbora-data-analyst-agent.hf.space/api/', {
+          method: 'POST',
+          body: formData
+        });
+
+        const bubbles = chat.getElementsByClassName('agent');
+        const lastBubble = bubbles[bubbles.length - 1];
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const json = await res.json();
+          lastBubble.textContent = JSON.stringify(json, null, 2);
+        } else {
+          const textResp = await res.text();
+          lastBubble.textContent = textResp;
+        }
+      } catch (err) {
+        console.error(err);
+        const bubbles = chat.getElementsByClassName('agent');
+        bubbles[bubbles.length - 1].textContent = 'Error: ' + err;
+      } finally {
+        sendBtn.disabled = false;
+        attachedFiles = [];
+        fileInput.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
